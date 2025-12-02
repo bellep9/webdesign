@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X, Ticket } from 'lucide-react';
 import { Event } from '../App';
+import { Tooltip } from './Tooltip';
 
 interface BookingModalProps {
   event: Event;
@@ -144,19 +145,23 @@ export function BookingModal({ event, onClose, onBook }: BookingModalProps) {
           </div>
 
           <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 py-3 px-4 rounded-full border-2 border-[#c8dcc0] text-[#6b8464] hover:bg-[#f5f5f5] transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="flex-1 py-3 px-4 rounded-full bg-[#7a9871] text-white hover:bg-[#6b8464] transition-colors"
-            >
-              Confirm Booking
-            </button>
+            <Tooltip content="Close without booking">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 py-3 px-4 rounded-full border-2 border-[#c8dcc0] text-[#6b8464] hover:bg-[#f5f5f5] transition-colors"
+              >
+                Cancel
+              </button>
+            </Tooltip>
+            <Tooltip content="Complete your ticket reservation">
+              <button
+                type="submit"
+                className="flex-1 py-3 px-4 rounded-full bg-[#7a9871] text-white hover:bg-[#6b8464] transition-colors"
+              >
+                Confirm Booking
+              </button>
+            </Tooltip>
           </div>
         </form>
       </div>

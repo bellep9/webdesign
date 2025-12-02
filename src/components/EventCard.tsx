@@ -3,6 +3,7 @@ import { Calendar, Users } from 'lucide-react';
 import { Event } from '../App';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { unsplash_tool } from '../utils/unsplash';
+import { Tooltip } from './Tooltip';
 
 interface EventCardProps {
   event: Event;
@@ -10,14 +11,24 @@ interface EventCardProps {
 }
 
 export function EventCard({ event, onSelect }: EventCardProps) {
-  const [imageUrl, setImageUrl] = useState<string>(event.image);
+  const [imageUrl, setImageUrl] = useState<string>('');
+  const [isDirectImage, setIsDirectImage] = useState<boolean>(false);
 
   useEffect(() => {
-    // If the image is not already a URL (i.e., it's a search query), fetch from Unsplash
-    if (!event.image.startsWith('http') && !event.image.startsWith('figma:') && !event.image.startsWith('/')) {
-      unsplash_tool(event.image).then(url => setImageUrl(url));
-    } else {
+    // Check if it's a direct image URL (figma asset, http, or file path)
+    const isDirect = event.image.startsWith('figma:') || 
+                     event.image.startsWith('http') || 
+                     event.image.startsWith('/') ||
+                     event.image.startsWith('blob:') ||
+                     event.image.startsWith('data:');
+    
+    setIsDirectImage(isDirect);
+    
+    if (isDirect) {
       setImageUrl(event.image);
+    } else {
+      // Otherwise, fetch from Unsplash using the search query
+      unsplash_tool(event.image).then(url => setImageUrl(url));
     }
   }, [event.image]);
 
@@ -27,11 +38,21 @@ export function EventCard({ event, onSelect }: EventCardProps) {
   return (
     <div className="bg-white rounded-2xl shadow-sm overflow-hidden hover:shadow-lg transition-shadow border-2 border-[#c8dcc0]">
       <div className="aspect-[3/4] overflow-hidden bg-[#e8f5e3]">
-        <ImageWithFallback
-          src={imageUrl}
-          alt={event.title}
-          className="w-full h-full object-cover"
-        />
+        {imageUrl && (
+          isDirectImage ? (
+            <img
+              src={imageUrl}
+              alt={event.title}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <ImageWithFallback
+              src={imageUrl}
+              alt={event.title}
+              className="w-full h-full object-cover"
+            />
+          )
+        )}
       </div>
       
       <div className="p-5">
@@ -41,22 +62,26 @@ export function EventCard({ event, onSelect }: EventCardProps) {
         </div>
         
         <div className="space-y-2 mb-4">
-          <div className="flex items-center gap-2 text-[#6b8464]">
-            <Calendar className="w-4 h-4" />
-            <span>{new Date(event.date).toLocaleDateString('en-US', { 
-              weekday: 'short', 
-              month: 'short', 
-              day: 'numeric',
-              year: 'numeric'
-            })}</span>
-          </div>
+          <Tooltip content="Screening date and time">
+            <div className="flex items-center gap-2 text-[#6b8464]">
+              <Calendar className="w-4 h-4" />
+              <span>{new Date(event.date).toLocaleDateString('en-US', { 
+                weekday: 'short', 
+                month: 'short', 
+                day: 'numeric',
+                year: 'numeric'
+              })}</span>
+            </div>
+          </Tooltip>
           
-          <div className="flex items-center gap-2 text-[#6b8464]">
-            <Users className="w-4 h-4" />
-            <span>
-              {event.seats_available} / {event.seats_total} seats available
-            </span>
-          </div>
+          <Tooltip content={`${event.seats_available} seats remaining out of ${event.seats_total}`}>
+            <div className="flex items-center gap-2 text-[#6b8464]">
+              <Users className="w-4 h-4" />
+              <span>
+                {event.seats_available} / {event.seats_total} seats available
+              </span>
+            </div>
+          </Tooltip>
         </div>
 
         {isLowAvailability && !isSoldOut && (
